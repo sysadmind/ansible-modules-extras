@@ -19,6 +19,7 @@
 # along with Ansible.  If not, see <http://www.gnu.org/licenses/>.
 
 import json
+import os
 from time import sleep
 
 # import module snippets
@@ -58,6 +59,7 @@ options:
   importer_ssl_ca_cert:
     description:
       - CA certificate string used to validate the feed source SSL certificate.
+        This can be the file content or the path to the file.
     required: false
     default: null
   importer_ssl_client_cert:
@@ -66,13 +68,15 @@ options:
         repository. This is used to communicate authentication information to
         the feed source. The value to this option must be the full path to the
         certificate. The specified file may be the certificate itself or a
-        single file containing both the certificate and private key.
+        single file containing both the certificate and private key. This can be
+        the file content or the path to the file.
     required: false
     default: null
   importer_ssl_client_key:
     description:
       - Private key to the certificate specified in I(importer_ssl_client_cert),
-        assuming it is not included in the certificate file itself.
+        assuming it is not included in the certificate file itself. This can be
+        the file content or the path to the file.
     required: false
     default: null
   name:
@@ -538,6 +542,25 @@ def main():
 
     if (state == 'present') and (not relative_url):
         module.fail_json(msg="When state is present, relative_url is required.")
+
+    # Ensure that the importer_ssl_* is the content and not a file path
+    if importer_ssl_ca_cert is not None:
+        importer_ssl_ca_cert_file_path = os.path.abspath(importer_ssl_ca_cert)
+        if os.path.isfile(importer_ssl_ca_cert_file_path):
+            with open(importer_ssl_ca_cert_file_path, 'r') as importer_ssl_ca_cert_file_object:
+                importer_ssl_ca_cert = importer_ssl_ca_cert_file_object.read()
+
+    if importer_ssl_client_cert is not None:
+        importer_ssl_client_cert_file_path = os.path.abspath(importer_ssl_client_cert)
+        if os.path.isfile(importer_ssl_client_cert_file_path):
+            with open(importer_ssl_client_cert_file_path, 'r') as importer_ssl_client_cert_file_object:
+                importer_ssl_client_cert = importer_ssl_client_cert_file_object.read()
+
+    if importer_ssl_client_key is not None:
+        importer_ssl_client_key_file_path = os.path.abspath(importer_ssl_client_key)
+        if os.path.isfile(importer_ssl_client_key_file_path):
+            with open(importer_ssl_client_key_file_path, 'r') as importer_ssl_client_key_file_object:
+                importer_ssl_client_key = importer_ssl_client_key_file_object.read()
 
     server = pulp_server(module, pulp_host, repo_type, wait_for_completion=wait_for_completion)
     server.set_repo_list()
