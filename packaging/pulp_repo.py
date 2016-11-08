@@ -33,7 +33,7 @@ author: "Joe Adams (@sysadmind)"
 short_description: Add or remove Pulp repos from a remote host.
 description:
   - Add or remove Pulp repos from a remote host.
-version_added: "2.2"
+version_added: "2.3"
 requirements: []
 options:
   add_export_distributor:
